@@ -1,0 +1,6 @@
+include LICENSE
+include gfndevice/schema.sql
+graft gfndevice/static
+graft gfndevice/templates
+graft tests
+global-exclude *.pyc
