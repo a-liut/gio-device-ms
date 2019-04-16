@@ -33,7 +33,7 @@ class Device(db.Model):
         }
 
 
-    def __repr__(self):
+    def __repr__(self): # pragma: no cover
         return "<Device {}, mac={}>".format(self.id, self.mac)
 
 
@@ -54,7 +54,7 @@ class Reading(db.Model):
         if not value:
             raise AssertionError("No {} value provided".format(key))
 
-        if value < 0:
+        if not isinstance(value, int) or value < 0:
             raise AssertionError("Invalid {} value".format(key))
 
         return value
@@ -71,5 +71,5 @@ class Reading(db.Model):
         }
 
 
-    def __repr__(self):
+    def __repr__(self): # pragma: no cover
         return "<Reading {}, temperature={}, moisture={}, light={}>".format(self.id, self.temperature, self.moisture, self.light)

@@ -1,5 +1,4 @@
 import os
-import wtforms_json
 
 from flask import Flask, request, jsonify
 
@@ -17,9 +16,12 @@ def wrap_error(error=None):
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_object('gfndevice.settings.DevConfig')
-
-    wtforms_json.init()
+    if test_config is None:
+        print("DB: Using DevConfig...")
+        app.config.from_object('gfndevice.settings.DevConfig')
+    else:
+        print("DB: Using test_config...")
+        app.config.from_object(test_config)
 
     # ensure the instance folder exists
     try:

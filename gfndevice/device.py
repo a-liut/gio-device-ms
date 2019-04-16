@@ -7,10 +7,8 @@ bp = Blueprint('device', __name__)
 
 
 def get_device(id):
-	if not id:
-		return None
-
 	return Device.query.get(id)
+	
 
 @bp.route('/', methods=['GET', 'POST'])
 def device():

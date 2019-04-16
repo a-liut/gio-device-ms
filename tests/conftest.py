@@ -1,64 +1,48 @@
 import os
-import tempfile
-
 import pytest
+
 from gfndevice import create_app
-from gfndevice.db import get_db, init_db
-
-# read in SQL for populating test data
-with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
-    _data_sql = f.read().decode('utf8')
+from gfndevice.db import db as _db
+from gfndevice.settings import TestConfig
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def app():
-    """Create and configure a new app instance for each test."""
-    # create a temporary file to isolate the database for each test
-    db_fd, db_path = tempfile.mkstemp()
+    """Session-wide test `Flask` application."""
+
     # create the app with common test config
-    app = create_app({
-        'TESTING': True,
-        'DATABASE': db_path,
-    })
+    config = TestConfig()
+    app = create_app(config)
 
-    # create the database and load test data
-    with app.app_context():
-        init_db()
-        get_db().executescript(_data_sql)
-
-    yield app
-
-    # close and remove the temporary database
-    os.close(db_fd)
-    os.unlink(db_path)
+    return app
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def client(app):
     """A test client for the app."""
-    return app.test_client()
+
+    tc = app.test_client()
+
+    # Establish an application context before running the tests.
+    ctx = app.app_context()
+    ctx.push()
+ 
+    yield tc  # this is where the testing happens!
+ 
+    ctx.pop()
 
 
-@pytest.fixture
-def runner(app):
-    """A test runner for the app's Click commands."""
-    return app.test_cli_runner()
+@pytest.fixture(scope='module')
+def database(app):
+    """Session-wide test database."""
 
+    with app.app_context():
+        _db.init_app(app)
 
-class AuthActions(object):
-    def __init__(self, client):
-        self._client = client
+        print("Init db...")
 
-    def login(self, username='test', password='test'):
-        return self._client.post(
-            '/auth/login',
-            data={'username': username, 'password': password}
-        )
+        _db.create_all()
 
-    def logout(self):
-        return self._client.get('/auth/logout')
+        yield _db
 
-
-@pytest.fixture
-def auth(client):
-    return AuthActions(client)
+        _db.drop_all()

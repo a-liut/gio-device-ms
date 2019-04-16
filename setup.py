@@ -10,7 +10,7 @@ setup(
     version='1.0.0',
     license='BSD',
     maintainer='SOCC Unipi',
-    description='Microservice for managing devices for the Giò system',
+    description='Microservice for managing devices for the Gio system',
     long_description=readme,
     packages=find_packages(),
     include_package_data=True,
@@ -22,7 +22,7 @@ setup(
     extras_require={
         'test': [
             'pytest',
-            'coverage',
+            'pytest-cov'
         ],
     },
 )
