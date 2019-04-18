@@ -96,3 +96,39 @@ def test_create_reading_missing_data(client, database):
     for d in datas:
         response = client.post('/devices/1/readings', data=json.dumps(d), headers=headers)
         assert response.status_code == 400
+
+
+def test_create_reading_invalid_data(client, database):
+    mimetype = 'application/json'
+    headers = {
+        'Content-Type': mimetype,
+        'Accept': mimetype
+    }
+
+    datas = [
+        {
+            "temperature": -1
+        },
+        {
+            "moisture": -1
+        },
+        {
+            "light": -1
+        },
+        {
+            "temperature": -1,
+            "moisture": -1
+        },
+        {
+            "temperature": -1,
+            "light": -1
+        },
+        {
+            "moisture": -1,
+            "light": -1
+        }
+    ]
+
+    for d in datas:
+        response = client.post('/devices/1/readings', data=json.dumps(d), headers=headers)
+        assert response.status_code == 400
