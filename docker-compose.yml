@@ -1,0 +1,8 @@
+version: '2.1'
+
+services:
+  gio-device-ms:
+    image: gio-device-ms
+    build: .
+    ports:
+      - 3000:3000

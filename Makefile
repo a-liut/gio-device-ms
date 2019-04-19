@@ -1,5 +1,7 @@
 .PHONY: deps test run
 
+all: deps run
+
 deps:
 	pip install -e .
 

@@ -1,0 +1,10 @@
+version: '2.1'
+
+services:
+  gio-device-ms:
+    image: gio-device-ms
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
