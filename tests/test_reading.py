@@ -1,10 +1,23 @@
 from flask import json
-from gfndevice.models import Device
+from gfndevice.models import Device, Room
+
+def new_test_device(database, id, mac, name, room):
+    d1 = Device(id=id, mac=mac, name=name, room=room)
+    database.session.add(d1)
+    database.session.flush()
+
+    return d1
+
+def new_test_room(database, room_name):
+    r = Room(name=room_name)
+    database.session.add(r)
+    database.session.flush()
+
+    return r
 
 def test_empty_readings(client, database):
-    test_mac = "f6:f1:bb:06:31:79"
-    d1 = Device(id=1, mac=test_mac)
-    database.session.add(d1)
+    r = new_test_room(database, "test_room")
+    new_test_device(database, 1, "f6:f1:bb:06:31:79", "test_dev", r)
     database.session.commit()
 
     response = client.get('/devices/1/readings')
@@ -20,6 +33,10 @@ def test_readings_device_not_found(client, database):
 
 
 def test_create_reading(client, database):
+    r = new_test_room(database, "test_room")
+    new_test_device(database, 1, "f6:f1:bb:06:31:79", "test_dev", r)
+    database.session.commit()
+
     mimetype = 'application/json'
     headers = {
         'Content-Type': mimetype,
@@ -45,6 +62,10 @@ def test_create_reading(client, database):
 
 
 def test_create_reading_error(client, database):
+    r = new_test_room(database, "test_room")
+    new_test_device(database, 1, "f6:f1:bb:06:31:79", "test_dev", r)
+    database.session.commit()
+
     mimetype = 'application/json'
     headers = {
         'Content-Type': mimetype,
@@ -63,6 +84,10 @@ def test_create_reading_error(client, database):
 
 
 def test_create_reading_missing_data(client, database):
+    r = new_test_room(database, "test_room")
+    new_test_device(database, 1, "f6:f1:bb:06:31:79", "test_dev", r)
+    database.session.commit()
+
     mimetype = 'application/json'
     headers = {
         'Content-Type': mimetype,
@@ -99,6 +124,10 @@ def test_create_reading_missing_data(client, database):
 
 
 def test_create_reading_invalid_data(client, database):
+    r = new_test_room(database, "test_room")
+    new_test_device(database, 1, "f6:f1:bb:06:31:79", "test_dev", r)
+    database.session.commit()
+
     mimetype = 'application/json'
     headers = {
         'Content-Type': mimetype,

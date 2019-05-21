@@ -1,6 +1,14 @@
 from flask import json
 from gfndevice.models import Device, Room
 
+def new_test_room(database, room_name):
+    r = Room(name=room_name)
+    database.session.add(r)
+    database.session.flush()
+
+    return r
+
+
 def test_empty_devices(client, database):
     response = client.get('/devices/')
 
@@ -10,9 +18,7 @@ def test_empty_devices(client, database):
 
 def test_single_device(client, database):
     test_room_name="TRoom"
-    r1 = Room(name=test_room_name)
-    database.session.add(r1)
-    database.session.flush()
+    r1 = new_test_room(database, test_room_name)
 
     test_mac = "f6:f1:bb:06:31:71"
     test_name = "TestDevice"
@@ -34,9 +40,7 @@ def test_single_device(client, database):
 
 def test_get_device(client, database):
     test_room_name="TRoom1"
-    r1 = Room(name=test_room_name)
-    database.session.add(r1)
-    database.session.flush()
+    r1 = new_test_room(database, test_room_name)
 
     test_mac = "f6:f1:bb:06:31:72"
     test_name = "TestDevice1"
@@ -142,7 +146,8 @@ def test_duplicated_device(client, database):
     }
 
     data = {
-        'mac': "f6:f1:bb:06:31:74"
+        'mac': "f6:f1:bb:06:31:74",
+        'name': 'new_name'
     }
 
     # Create the first device
@@ -165,7 +170,7 @@ def test_duplicated_name_device(client, database):
     }
 
     data = {
-        'mac': "f6:f1:bb:06:31:75",
+        'mac': "f6:f1:bb:06:31:77",
         'name': 'same_name'
     }
 
@@ -173,6 +178,11 @@ def test_duplicated_name_device(client, database):
     response = client.post('/devices/', data=json.dumps(data), headers=headers)
 
     assert response.status_code == 200
+
+    data = {
+        'mac': "f6:f1:bb:06:31:78",
+        'name': 'same_name'
+    }
 
     # Try to create a new device with the same name
     response = client.post('/devices/', data=json.dumps(data), headers=headers)

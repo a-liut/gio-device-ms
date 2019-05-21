@@ -1,6 +1,13 @@
 from flask import json
 from gfndevice.models import Room
 
+def new_test_room(database, room_name):
+    r = Room(name=room_name)
+    database.session.add(r)
+    database.session.flush()
+
+    return r
+
 def test_empty_rooms(client, database):
     response = client.get('/rooms/')
 
@@ -10,11 +17,10 @@ def test_empty_rooms(client, database):
 
 def test_single_room(client, database):
     test_name = "room1"
-    r1 = Room(name=test_name)
-    database.session.add(r1)
+    new_test_room(database, test_name)
     database.session.commit()
 
-    response = client.get('/room/')
+    response = client.get('/rooms/')
 
     assert response.status_code == 200
 
@@ -73,8 +79,8 @@ def test_create_room(client, database):
 
     r = response.get_json()
 
-    assert data['name'] == r['name']
-    assert data['devices'] == []
+    assert r['name'] == data['name']
+    assert r['devices'] == []
 
 
 # def test_create_device_missing_data(client, database):

@@ -16,13 +16,13 @@ def device():
 		data = request.get_json()
 		mac = data.get("mac", None)
 		name = data.get("name", None)
-		room_id = int(data.get("room_id", None))
+		room_id = data.get("room_id", None)
 
 		try:
 			r = None
 
 			if room_id:
-				r = Room.query.get(room_id)
+				r = Room.query.get(int(room_id))
 			
 			if not r:
 				r = Room.create()

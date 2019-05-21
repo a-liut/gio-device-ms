@@ -46,3 +46,19 @@ def database(app):
         yield _db
 
         _db.drop_all()
+
+@pytest.fixture(scope='function', autouse=True)
+def session(database):
+    connection = database.engine.connect()
+    transaction = connection.begin()
+
+    options = dict(bind=connection, binds={})
+    session_ = database.create_scoped_session(options=options)
+
+    database.session = session_
+
+    yield session_
+
+    transaction.rollback()
+    connection.close()
+    session_.remove()
