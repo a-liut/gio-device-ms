@@ -4,10 +4,36 @@ from gfndevice.db import db
 from datetime import datetime
 from sqlalchemy.orm import validates
 
+class Room(db.Model):
+    __tablename__ = 'rooms'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), nullable=False, unique=True)
+
+    devices = db.relationship('Device', back_populates="room")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "devices": [d.id for d in self.devices]
+        }
+
+    @staticmethod
+    def create(name=None):
+        if not name:
+            name = "Room{}".format(Room.query.count() + 1)
+        
+        return Room(name=name)
+
+
 class Device(db.Model):
     __tablename__ = 'devices'
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), nullable=False)
     mac = db.Column(db.String(17), nullable=False, unique=True) # MACs are 12 digits + 5 ':'
+
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
+    room = db.relationship('Room', back_populates="devices")
 
     readings = db.relationship('Reading', back_populates="device")
 
@@ -26,15 +52,27 @@ class Device(db.Model):
         return mac
 
 
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name:
+            raise AssertionError("No name provided")
+
+        if Device.query.filter_by(name=name).first():
+            raise AssertionError("Name already in use")
+
+        return name
+
     def to_dict(self):
         return {
             "id": self.id,
-            "mac": self.mac
+            "name": self.name,
+            "mac": self.mac,
+            "room": self.room_id
         }
 
 
     def __repr__(self): # pragma: no cover
-        return "<Device {}, mac={}>".format(self.id, self.mac)
+        return "<Device {}, name={}, mac={}, room={}>".format(self.id, self.name, self.mac, self.room_id)
 
 
 class Reading(db.Model):

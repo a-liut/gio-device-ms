@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, abort, request
-from gfndevice.models import Device, Reading
+from gfndevice.models import Device, Reading, Room
 from gfndevice.db import db
 
 
@@ -15,9 +15,21 @@ def device():
 	if request.method == 'POST':
 		data = request.get_json()
 		mac = data.get("mac", None)
+		name = data.get("name", None)
+		room_id = int(data.get("room_id", None))
 
 		try:
-			d = Device(mac=mac)
+			r = None
+
+			if room_id:
+				r = Room.query.get(room_id)
+			
+			if not r:
+				r = Room.create()
+				db.session.add(r)
+				db.session.flush()
+
+			d = Device(mac=mac, name=name, room_id=r.id)
 
 			db.session.add(d)
 			db.session.commit()

@@ -30,8 +30,9 @@ def create_app(test_config=None):
         pass
 
     # apply the blueprints to the app
-    from gfndevice import device
+    from gfndevice import device, room
     app.register_blueprint(device.bp, url_prefix='/devices')
+    app.register_blueprint(room.bp, url_prefix='/rooms')
 
     # Initialize db
     from gfndevice.db import db
