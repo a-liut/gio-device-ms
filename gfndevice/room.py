@@ -26,7 +26,13 @@ def rooms():
 		except AssertionError as exception_message:
 			abort(400, str(exception_message))
 
-	return jsonify([r.to_dict() for r in Room.query.all()])
+	name_query = request.args.get('name', None)
+
+	query = Room.query
+	if name_query:
+		query = query.filter(Room.name.ilike("%{}%".format(name_query)))
+
+	return jsonify([r.to_dict() for r in query.all()])
 
 
 @bp.route('/<int:id>', methods=(['GET']))

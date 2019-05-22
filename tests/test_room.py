@@ -33,6 +33,40 @@ def test_single_room(client, database):
     assert name1 == test_name
 
 
+def test_room_search(client, database):
+    test_name_1 = "room1"
+    test_name_2 = "room2"
+    new_test_room(database, test_name_1)
+    new_test_room(database, test_name_2)
+    database.session.commit()
+
+    # Search with whole word
+    response = client.get("/rooms/?name={}".format(test_name_1))
+
+    assert response.status_code == 200
+
+    # Check the device
+    l = response.get_json()
+    assert len(l) == 1
+
+    name1 = l[0]['name']
+
+    assert name1 == test_name_1
+
+    # Search with partial keyword
+    response = client.get("/rooms/?name={}".format("2"))
+
+    assert response.status_code == 200
+
+    # Check the device
+    l = response.get_json()
+    assert len(l) == 1
+
+    name2 = l[0]['name']
+
+    assert name2 == test_name_2
+
+
 def test_get_device(client, database):
     test_name = "room1"
     r1 = Room(name=test_name)
