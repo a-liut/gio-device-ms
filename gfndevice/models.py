@@ -11,12 +11,14 @@ class Room(db.Model):
 
     devices = db.relationship('Device', back_populates="room")
     
+
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
             "devices": [d.id for d in self.devices]
         }
+
 
     @staticmethod
     def create(name=None):
@@ -62,6 +64,7 @@ class Device(db.Model):
 
         return name
 
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -79,21 +82,32 @@ class Reading(db.Model):
     __tablename__ = 'readings'
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    temperature = db.Column(db.Integer, nullable=False)
-    moisture = db.Column(db.Integer, nullable=False)
-    light = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String, nullable=False)
+    value = db.Column(db.Float, nullable=False)
+    unit = db.Column(db.String, default=None)
 
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)
     device = db.relationship('Device', back_populates="readings")
 
 
-    @validates('temperature', 'moisture', 'light')
-    def validate_positive_int(self, key, value):
-        if not value:
-            raise AssertionError("No {} value provided".format(key))
+    @validates('name', 'unit')
+    def validate_name(self, key, name):
+        if not name:
+            raise AssertionError("No name provided")
 
-        if not isinstance(value, int) or value < 0:
-            raise AssertionError("Invalid {} value".format(key))
+        if not isinstance(name, str):
+            raise AssertionError("Invalid {}".format(key))
+
+        return name
+
+
+    @validates('value')
+    def validate_value(self, key, value):
+        if not value:
+            raise AssertionError("No value provided")
+
+        if not isinstance(value, int):
+            raise AssertionError("Invalid value")
 
         return value
 
@@ -102,12 +116,12 @@ class Reading(db.Model):
         return {
             "id": self.id,
             "timestamp": self.timestamp,
-            "temperature": self.temperature,
-            "moisture": self.moisture,
-            "light": self.light,
+            "name": self.name,
+            "value": self.value,
+            "unit": self.unit,
             "device": self.device.id
         }
 
 
     def __repr__(self): # pragma: no cover
-        return "<Reading {}, temperature={}, moisture={}, light={}>".format(self.id, self.temperature, self.moisture, self.light)
+        return "<Reading {}, name={}, value={}, unit={}, device={}>".format(self.id, self.name, self.value, self.unit, self.device.id)

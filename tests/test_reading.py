@@ -44,9 +44,9 @@ def test_create_reading(client, database):
     }
 
     data = {
-        "temperature": 12,
-        "moisture": 123,
-        "light": 111
+        "name": "temperature",
+        "value": 12,
+        "unit": "C°"
     }
 
     # Create the reading
@@ -54,11 +54,11 @@ def test_create_reading(client, database):
 
     assert response.status_code == 200
 
-    d = response.get_json()
+    reading = response.get_json()
 
-    assert data['temperature'] == d['temperature']
-    assert data['moisture'] == d['moisture']
-    assert data['light'] == d['light']
+    assert data['name'] == reading['name']
+    assert data['value'] == reading['value']
+    assert data['unit'] == reading['unit']
 
 
 def test_create_reading_error(client, database):
@@ -73,9 +73,9 @@ def test_create_reading_error(client, database):
     }
 
     data = {
-        "temperature": "asd",
-        "moisture": "asd",
-        "light": "asd"
+        "name": "asd",
+        "value": "asd",
+        "unit": ""
     }
 
     response = client.post('/devices/1/readings', data=json.dumps(data), headers=headers)
@@ -96,25 +96,19 @@ def test_create_reading_missing_data(client, database):
 
     datas = [
         {
-            "temperature": 123
         },
         {
-            "moisture": 123
+            "name": "test"
         },
         {
-            "light": 123
+            "value": 123
         },
         {
-            "temperature": 123,
-            "moisture": 123
+            "unit": ""
         },
         {
-            "temperature": 123,
-            "light": 123
-        },
-        {
-            "moisture": 123,
-            "light": 123
+            "value": 123,
+            "unit": "C°"
         }
     ]
 
@@ -134,30 +128,24 @@ def test_create_reading_invalid_data(client, database):
         'Accept': mimetype
     }
 
-    datas = [
-        {
-            "temperature": -1
-        },
-        {
-            "moisture": -1
-        },
-        {
-            "light": -1
-        },
-        {
-            "temperature": -1,
-            "moisture": -1
-        },
-        {
-            "temperature": -1,
-            "light": -1
-        },
-        {
-            "moisture": -1,
-            "light": -1
+    data = {
+            "name": -1,
+            "value": 1
         }
-    ]
+    response = client.post('/devices/1/readings', data=json.dumps(data), headers=headers)
+    assert response.status_code == 400
 
-    for d in datas:
-        response = client.post('/devices/1/readings', data=json.dumps(d), headers=headers)
-        assert response.status_code == 400
+    data = {
+            "name": "test",
+            "value": "asd"
+        }
+    response = client.post('/devices/1/readings', data=json.dumps(data), headers=headers)
+    assert response.status_code == 400
+
+    data = {
+            "name": "test2",
+            "value": 1,
+            "unit": 1
+        }
+    response = client.post('/devices/1/readings', data=json.dumps(data), headers=headers)
+    assert response.status_code == 400

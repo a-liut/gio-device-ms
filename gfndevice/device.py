@@ -60,12 +60,13 @@ def readings(id):
 
 	if request.method == 'POST':
 		data = request.get_json()
-		temperature = data.get("temperature", None)
-		light = data.get("light", None)
-		moisture = data.get("moisture", None)
+
+		name = data.get("name", None)
+		value = data.get("value", None)
+		unit = data.get("unit", None)
 
 		try:
-			r = Reading(temperature = temperature, light = light, moisture = moisture, device = d)
+			r = Reading(name=name, value=value, unit=unit, device = d)
 
 			db.session.add(r)
 			db.session.commit()
