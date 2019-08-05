@@ -83,7 +83,7 @@ class Reading(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
-    value = db.Column(db.Float, nullable=False)
+    value = db.Column(db.String, nullable=False)
     unit = db.Column(db.String, default=None)
 
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)
@@ -105,9 +105,6 @@ class Reading(db.Model):
     def validate_value(self, key, value):
         if not value:
             raise AssertionError("No value provided")
-
-        if not isinstance(value, int):
-            raise AssertionError("Invalid value")
 
         return value
 
