@@ -10,7 +10,7 @@ def get_device(id):
 	return Device.query.get(id)
 	
 
-@bp.route('/', methods=['GET', 'POST'])
+@bp.route('', methods=['GET', 'POST'])
 def device():
 	if request.method == 'POST':
 		data = request.get_json()
@@ -66,7 +66,7 @@ def readings(id):
 		unit = data.get("unit", None)
 
 		try:
-			r = Reading(name=name, value=value, unit=unit, device = d)
+			r = Reading(name=name, value=value, unit=unit, device=d)
 
 			db.session.add(r)
 			db.session.commit()

@@ -10,14 +10,14 @@ def get_room(id):
 	return Room.query.get(id)
 	
 
-@bp.route('/', methods=['GET', 'POST'])
+@bp.route('', methods=['GET', 'POST'])
 def rooms():
 	if request.method == 'POST':
 		data = request.get_json()
 		name = data.get("name", None)
 
 		try:
-			r = Room(name=name)
+			r = Room.create(name=name)
 
 			db.session.add(r)
 			db.session.commit()
