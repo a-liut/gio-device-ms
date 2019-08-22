@@ -5,4 +5,4 @@ services:
     image: gio-device-ms
     build: .
     ports:
-      - 5000:5000
+      - 5000:8080

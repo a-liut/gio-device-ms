@@ -15,4 +15,6 @@ ADD . /app
 ENV FLASK_APP=gfndevice
 ENV FLASK_ENV=development
 
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
+EXPOSE 8080
+
+CMD ["flask", "run", "--host=0.0.0.0", "--port=8080"]
