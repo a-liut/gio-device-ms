@@ -63,30 +63,40 @@ func GetRooms(w http.ResponseWriter, _ *http.Request) {
 }
 
 func CreateRoom(w http.ResponseWriter, r *http.Request) {
-	var room model.Room
+	var roomData model.Room
 
-	err := json.NewDecoder(r.Body).Decode(&room)
+	err := json.NewDecoder(r.Body).Decode(&roomData)
 	if err != nil {
 		errorHandler(w, http.StatusBadRequest, "Invalid data")
 		return
 	}
 
-	if _, err := room.Validate(); err != nil {
+	if _, err := roomData.Validate(); err != nil {
 		errorHandler(w, http.StatusBadRequest, err.Error())
 	}
 
 	repo, _ := repository.NewRoomRepository()
-	newRoom, err := repo.Insert(&room)
 
+	room, err := repo.GetByName(roomData.Name)
 	if err != nil {
 		errorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	if room == nil {
+		// Create a new room
+		room, err = repo.Insert(&roomData)
+
+		if err != nil {
+			errorHandler(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(newRoom); err != nil {
+	if err := json.NewEncoder(w).Encode(room); err != nil {
 		log.Println(err)
 	}
 }

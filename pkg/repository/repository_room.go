@@ -44,6 +44,16 @@ func (r *RoomRepository) Insert(room *model.Room) (*model.Room, error) {
 	return room, nil
 }
 
+func (r *RoomRepository) GetByName(name string) (*model.Room, error) {
+	for _, room := range r.rooms {
+		if room.Name == name {
+			return room, nil
+		}
+	}
+
+	return nil, nil
+}
+
 var roomRepository *RoomRepository
 
 func NewRoomRepository() (*RoomRepository, error) {
