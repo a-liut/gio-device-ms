@@ -16,6 +16,7 @@ import (
 	"gio-device-ms/pkg/repository"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -130,6 +131,12 @@ func GetDeviceReadings(w http.ResponseWriter, r *http.Request) {
 	id := vars["deviceId"]
 	roomId := vars["roomId"]
 
+	lim := r.URL.Query().Get("limit")
+	limit, err := strconv.Atoi(lim)
+	if err != nil {
+		limit = -1 // Take all readings
+	}
+
 	repo, _ := repository.NewDeviceRepository()
 
 	device, err := repo.Get(id)
@@ -143,7 +150,7 @@ func GetDeviceReadings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	readings, err := repo.GetReadings(id)
+	readings, err := repo.GetReadings(id, limit)
 	if err != nil {
 		errorHandler(w, http.StatusInternalServerError, err.Error())
 		return

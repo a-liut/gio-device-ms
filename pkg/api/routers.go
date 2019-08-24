@@ -24,6 +24,7 @@ type Route struct {
 	Name        string
 	Method      []string
 	Pattern     string
+	Queries     []string
 	HandlerFunc http.HandlerFunc
 }
 
@@ -48,6 +49,7 @@ func NewRouter() *mux.Router {
 		router.
 			Methods(route.Method...).
 			Path(route.Pattern).
+			//Queries(route.Queries...).
 			Name(route.Name).
 			Handler(handler)
 	}
@@ -56,12 +58,12 @@ func NewRouter() *mux.Router {
 }
 
 var routes = Routes{
-
 	// Rooms
 	Route{
 		"GetRoomById",
 		[]string{http.MethodGet},
 		"/rooms/{roomId}",
+		[]string{},
 		GetRoomById,
 	},
 
@@ -69,6 +71,7 @@ var routes = Routes{
 		"GetRooms",
 		[]string{http.MethodGet},
 		"/rooms",
+		[]string{},
 		GetRooms,
 	},
 
@@ -76,6 +79,7 @@ var routes = Routes{
 		"CreateRoom",
 		[]string{http.MethodPost},
 		"/rooms",
+		[]string{},
 		CreateRoom,
 	},
 
@@ -84,6 +88,7 @@ var routes = Routes{
 		"GetDeviceById",
 		[]string{http.MethodGet},
 		"/rooms/{roomId}/devices/{deviceId}",
+		[]string{},
 		GetDeviceById,
 	},
 
@@ -91,6 +96,7 @@ var routes = Routes{
 		"GetDevices",
 		[]string{http.MethodGet},
 		"/rooms/{roomId}/devices",
+		[]string{},
 		GetDevices,
 	},
 
@@ -98,6 +104,7 @@ var routes = Routes{
 		"CreateDevice",
 		[]string{http.MethodPost},
 		"/rooms/{roomId}/devices",
+		[]string{},
 		CreateDevice,
 	},
 
@@ -105,6 +112,7 @@ var routes = Routes{
 		"GetDeviceReadings",
 		[]string{http.MethodGet},
 		"/rooms/{roomId}/devices/{deviceId}/readings",
+		[]string{"limit", "{[0-9]+}"},
 		GetDeviceReadings,
 	},
 
@@ -112,6 +120,7 @@ var routes = Routes{
 		"CreateDeviceReadings",
 		[]string{http.MethodPost},
 		"/rooms/{roomId}/devices/{deviceId}/readings",
+		[]string{},
 		CreateDeviceReadings,
 	},
 }

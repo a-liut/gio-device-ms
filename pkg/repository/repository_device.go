@@ -26,13 +26,21 @@ func (r *DeviceRepository) Get(id string) (*model.Device, error) {
 	return d, nil
 }
 
-func (r *DeviceRepository) GetReadings(id string) ([]*model.Reading, error) {
+func (r *DeviceRepository) GetReadings(id string, limit int) ([]*model.Reading, error) {
 	readings, exists := r.readings[id]
 	if !exists {
 		return nil, fmt.Errorf("device %s not found", id)
 	}
 
-	return readings, nil
+	// Check boundaries
+	if limit <= 0 || limit > len(readings) {
+		limit = len(readings)
+	}
+
+	// take the last limit entries
+	idx := len(readings) - limit
+
+	return readings[idx:], nil
 }
 
 func (r *DeviceRepository) GetAll(roomId string) ([]*model.Device, error) {

@@ -92,6 +92,10 @@ Example:
 
     **GET**: return all readings of the specified devices in a specific room.
     
+    Optional query parameters
+    
+    - limit(n): limit the results obtained to the last n entries stored
+    
     **POST**: register a new reading for the specified device.
     
     Example body:
