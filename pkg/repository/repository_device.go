@@ -21,10 +21,7 @@ type DeviceRepository struct {
 }
 
 func (r *DeviceRepository) Get(id string) (*model.Device, error) {
-	d, exists := r.devices[id]
-	if !exists {
-		return nil, fmt.Errorf("device %s not found", id)
-	}
+	d, _ := r.devices[id]
 
 	return d, nil
 }
@@ -38,13 +35,15 @@ func (r *DeviceRepository) GetReadings(id string) ([]*model.Reading, error) {
 	return readings, nil
 }
 
-func (r *DeviceRepository) GetAll() ([]*model.Device, error) {
+func (r *DeviceRepository) GetAll(roomId string) ([]*model.Device, error) {
 	res := make([]*model.Device, len(r.devices))
 
 	i := 0
 	for _, d := range r.devices {
-		res[i] = d
-		i++
+		if roomId == "" || d.Room == roomId {
+			res[i] = d
+			i++
+		}
 	}
 
 	return res, nil

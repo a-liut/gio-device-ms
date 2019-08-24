@@ -11,7 +11,6 @@
 package repository
 
 import (
-	"fmt"
 	"gio-device-ms/pkg/model"
 )
 
@@ -20,10 +19,7 @@ type RoomRepository struct {
 }
 
 func (r *RoomRepository) Get(id string) (*model.Room, error) {
-	room, exists := r.rooms[id]
-	if !exists {
-		return nil, fmt.Errorf("room %s not found", id)
-	}
+	room, _ := r.rooms[id]
 
 	return room, nil
 }

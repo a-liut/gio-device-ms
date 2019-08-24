@@ -23,12 +23,13 @@ import (
 func GetDeviceById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["deviceId"]
+	roomId := vars["roomId"]
 
 	repo, _ := repository.NewDeviceRepository()
-	device, err := repo.Get(id)
+	device, _ := repo.Get(id)
 
-	if err != nil {
-		errorHandler(w, http.StatusNotFound, err.Error())
+	if device == nil || device.Room != roomId {
+		errorHandler(w, http.StatusNotFound, "device not found")
 		return
 	}
 
@@ -40,12 +41,32 @@ func GetDeviceById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetDevices(w http.ResponseWriter, _ *http.Request) {
+func GetDevices(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	roomId := vars["roomId"]
+
+	roomRepo, err := repository.NewRoomRepository()
+	if err != nil {
+		errorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	room, err := roomRepo.Get(roomId)
+	if err != nil {
+		errorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if room == nil {
+		errorHandler(w, http.StatusNotFound, "room not found")
+		return
+	}
+
 	repo, _ := repository.NewDeviceRepository()
-	devices, err := repo.GetAll()
+	devices, err := repo.GetAll(roomId)
 
 	if err != nil {
-		errorHandler(w, http.StatusNotFound, err.Error())
+		errorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -58,6 +79,9 @@ func GetDevices(w http.ResponseWriter, _ *http.Request) {
 }
 
 func CreateDevice(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	roomId := vars["roomId"]
+
 	var d model.Device
 
 	err := json.NewDecoder(r.Body).Decode(&d)
@@ -66,6 +90,8 @@ func CreateDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	d.Room = roomId
+
 	if _, err := d.Validate(); err != nil {
 		errorHandler(w, http.StatusBadRequest, err.Error())
 		return
@@ -73,14 +99,19 @@ func CreateDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Check room
 	roomRepo, _ := repository.NewRoomRepository()
-	if _, err := roomRepo.Get(d.Room); err != nil {
-		errorHandler(w, http.StatusBadRequest, err.Error())
+	room, err := roomRepo.Get(d.Room)
+	if err != nil {
+		errorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if room == nil {
+		errorHandler(w, http.StatusBadRequest, "room not found")
 		return
 	}
 
 	repo, _ := repository.NewDeviceRepository()
 	newDevice, err := repo.Insert(&d)
-
 	if err != nil {
 		errorHandler(w, http.StatusInternalServerError, err.Error())
 		return
@@ -97,10 +128,22 @@ func CreateDevice(w http.ResponseWriter, r *http.Request) {
 func GetDeviceReadings(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["deviceId"]
+	roomId := vars["roomId"]
 
 	repo, _ := repository.NewDeviceRepository()
-	readings, err := repo.GetReadings(id)
 
+	device, err := repo.Get(id)
+	if err != nil {
+		errorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if device == nil || device.Room != roomId {
+		errorHandler(w, http.StatusNotFound, "device not found")
+		return
+	}
+
+	readings, err := repo.GetReadings(id)
 	if err != nil {
 		errorHandler(w, http.StatusInternalServerError, err.Error())
 		return
@@ -117,6 +160,7 @@ func GetDeviceReadings(w http.ResponseWriter, r *http.Request) {
 func CreateDeviceReadings(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["deviceId"]
+	roomId := vars["roomId"]
 
 	var reading model.Reading
 	err := json.NewDecoder(r.Body).Decode(&reading)
@@ -128,14 +172,17 @@ func CreateDeviceReadings(w http.ResponseWriter, r *http.Request) {
 	repo, _ := repository.NewDeviceRepository()
 
 	device, err := repo.Get(id)
-
 	if err != nil {
-		errorHandler(w, http.StatusNotFound, err.Error())
+		errorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if device == nil || device.Room != roomId {
+		errorHandler(w, http.StatusNotFound, "device not found")
 		return
 	}
 
 	res, err := repo.InsertReading(device, &reading)
-
 	if err != nil {
 		errorHandler(w, http.StatusInternalServerError, err.Error())
 		return

@@ -30,6 +30,7 @@ type Route struct {
 func errorHandler(w http.ResponseWriter, status int32, message string) {
 	r := model.ApiResponse{Code: status, Message: message}
 	w.WriteHeader(int(status))
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	if err := json.NewEncoder(w).Encode(r); err != nil {
 		log.Println(err)
 	}
@@ -56,41 +57,7 @@ func NewRouter() *mux.Router {
 
 var routes = Routes{
 
-	Route{
-		"GetDeviceById",
-		[]string{http.MethodGet},
-		"/devices/{deviceId}",
-		GetDeviceById,
-	},
-
-	Route{
-		"GetDevices",
-		[]string{http.MethodGet},
-		"/devices",
-		GetDevices,
-	},
-
-	Route{
-		"CreateDevice",
-		[]string{http.MethodPost},
-		"/devices",
-		CreateDevice,
-	},
-
-	Route{
-		"GetDeviceReadings",
-		[]string{http.MethodGet},
-		"/devices/{deviceId}/readings",
-		GetDeviceReadings,
-	},
-
-	Route{
-		"CreateDeviceReadings",
-		[]string{http.MethodPost},
-		"/devices/{deviceId}/readings",
-		CreateDeviceReadings,
-	},
-
+	// Rooms
 	Route{
 		"GetRoomById",
 		[]string{http.MethodGet},
@@ -110,5 +77,41 @@ var routes = Routes{
 		[]string{http.MethodPost},
 		"/rooms",
 		CreateRoom,
+	},
+
+	// Devices
+	Route{
+		"GetDeviceById",
+		[]string{http.MethodGet},
+		"/rooms/{roomId}/devices/{deviceId}",
+		GetDeviceById,
+	},
+
+	Route{
+		"GetDevices",
+		[]string{http.MethodGet},
+		"/rooms/{roomId}/devices",
+		GetDevices,
+	},
+
+	Route{
+		"CreateDevice",
+		[]string{http.MethodPost},
+		"/rooms/{roomId}/devices",
+		CreateDevice,
+	},
+
+	Route{
+		"GetDeviceReadings",
+		[]string{http.MethodGet},
+		"/rooms/{roomId}/devices/{deviceId}/readings",
+		GetDeviceReadings,
+	},
+
+	Route{
+		"CreateDeviceReadings",
+		[]string{http.MethodPost},
+		"/rooms/{roomId}/devices/{deviceId}/readings",
+		CreateDeviceReadings,
 	},
 }
