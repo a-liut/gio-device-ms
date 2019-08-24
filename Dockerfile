@@ -1,20 +1,27 @@
-FROM python:alpine
+FROM golang:alpine AS builder
 
-LABEL Name=gio-device-ms Version=0.0.1
-EXPOSE 5000
+# Install git for fetching dependencies
+RUN apk update && apk add --no-cache git
 
-WORKDIR /app
+WORKDIR /devicems
 
-ADD ./setup.cfg /app/setup.cfg
-ADD ./setup.py /app/setup.py
-ADD ./README.rst /app/README.rst
-RUN pip install -e .
+COPY go.mod .
+COPY go.sum .
 
-ADD . /app
+RUN go mod download
 
-ENV FLASK_APP=gfndevice
-ENV FLASK_ENV=development
+COPY . .
+
+# Build the binary.
+RUN go build -o /go/bin/devicems cmd/devicems/main.go
+
+## Build lighter image
+FROM alpine:latest
+
+# Copy our static executable.
+COPY --from=builder /go/bin/devicems /devicems
 
 EXPOSE 8080
 
-CMD ["flask", "run", "--host=0.0.0.0", "--port=8080"]
+# Run the binary.
+ENTRYPOINT /devicems

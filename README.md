@@ -7,9 +7,9 @@ Microservice that stores data of connected devices and their data.
 Run
 
 ```bash
-docker build --rm -f "Dockerfile" -t gio-device-ms:latest .
+docker build -t gio-device-ms:latest .
 
-docker run --rm -it -p 5000:5000/tcp gio-device-ms:latest
+docker run gio-device-ms:latest
 ```
 
 ## Entities
