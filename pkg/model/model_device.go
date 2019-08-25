@@ -11,7 +11,12 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
 )
 
 type Device struct {
@@ -21,20 +26,33 @@ type Device struct {
 	Room string `json:"room"`
 }
 
-func (i *Device) Validate() (bool, error) {
-	if i.Name == "" {
+func (device *Device) Validate() (bool, error) {
+	if device.Name == "" {
 		return false, fmt.Errorf("invalid name")
 	}
 
-	if i.Mac == "" {
+	if device.Mac == "" {
 		return false, fmt.Errorf("invalid mac")
 	}
 
-	if i.Room == "" {
+	if device.Room == "" {
 		return false, fmt.Errorf("invalid room")
 	}
 
 	return true, nil
+}
+
+func (device *Device) TriggerAction(actionName string) error {
+	driver, err := GetSmartDriverManager(device.Room)
+	if err != nil {
+		return err
+	}
+
+	if err = driver.TriggerAction(device, actionName); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type Reading struct {
@@ -42,4 +60,61 @@ type Reading struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 	Unit  string `json:"unit"`
+}
+
+type DriverApiResponse struct {
+	Message string `json:"message"`
+}
+
+type SmartVaseDriverManager struct {
+	url *url.URL
+}
+
+var driverManager *SmartVaseDriverManager = nil
+
+func GetSmartDriverManager(roomId string) (*SmartVaseDriverManager, error) {
+	if driverManager == nil {
+		// TODO: check the room to route correctly the message
+
+		fogNodeHost := os.Getenv("FOG_NODE_HOST")
+		fogNodePort := os.Getenv("FOG_NODE_PORT")
+
+		u := fmt.Sprintf("http://%s:%s", fogNodeHost, fogNodePort)
+		log.Printf("FogNode URL: %s\n", u)
+
+		nodeUrl, err := url.Parse(u)
+		if err != nil {
+			return nil, err
+		}
+
+		driverManager = &SmartVaseDriverManager{
+			url: nodeUrl,
+		}
+	}
+
+	return driverManager, nil
+}
+
+func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName string) error {
+	u := fmt.Sprintf("%s/devices/%s/actions/%s", manager.url, device.Mac, actionName)
+	resp, err := http.Post(u, "application/json", nil)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+
+		// Get error response
+		var bodyData DriverApiResponse
+		err := json.NewDecoder(resp.Body).Decode(&bodyData)
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("cannot trigger action: (%d) %s", resp.StatusCode, bodyData.Message)
+	}
+
+	return nil
 }

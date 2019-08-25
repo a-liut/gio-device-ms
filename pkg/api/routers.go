@@ -113,4 +113,11 @@ var routes = Routes{
 		"/rooms/{roomId}/devices/{deviceId}/readings",
 		CreateDeviceReadings,
 	},
+
+	Route{
+		"TriggerDeviceAction",
+		[]string{http.MethodPost},
+		"/rooms/{roomId}/devices/{deviceId}/actions/{actionName}",
+		TriggerDeviceAction,
+	},
 }
