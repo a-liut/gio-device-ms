@@ -13,20 +13,30 @@ package repository
 import (
 	"fmt"
 	"gio-device-ms/pkg/model"
+	"sync"
 )
 
 type DeviceRepository struct {
+	devicesMutex  *sync.Mutex
+	readingsMutex *sync.Mutex
+
 	devices  map[string]*model.Device
 	readings map[string][]*model.Reading
 }
 
 func (r *DeviceRepository) Get(id string) (*model.Device, error) {
+	r.devicesMutex.Lock()
+	defer r.devicesMutex.Unlock()
+
 	d, _ := r.devices[id]
 
 	return d, nil
 }
 
 func (r *DeviceRepository) GetReadings(id string, limit int) ([]*model.Reading, error) {
+	r.readingsMutex.Lock()
+	defer r.readingsMutex.Unlock()
+
 	readings, exists := r.readings[id]
 	if !exists {
 		return nil, fmt.Errorf("device %s not found", id)
@@ -46,6 +56,9 @@ func (r *DeviceRepository) GetReadings(id string, limit int) ([]*model.Reading, 
 func (r *DeviceRepository) GetAll(roomId string) ([]*model.Device, error) {
 	res := make([]*model.Device, len(r.devices))
 
+	r.devicesMutex.Lock()
+	defer r.devicesMutex.Unlock()
+
 	i := 0
 	for _, d := range r.devices {
 		if roomId == "" || d.Room == roomId {
@@ -60,6 +73,11 @@ func (r *DeviceRepository) GetAll(roomId string) ([]*model.Device, error) {
 func (r *DeviceRepository) Insert(device *model.Device) (*model.Device, error) {
 	device.ID = newID()
 
+	r.devicesMutex.Lock()
+	r.readingsMutex.Lock()
+	defer r.readingsMutex.Unlock()
+	defer r.devicesMutex.Unlock()
+
 	r.devices[device.ID] = device
 	r.readings[device.ID] = make([]*model.Reading, 0)
 
@@ -68,6 +86,9 @@ func (r *DeviceRepository) Insert(device *model.Device) (*model.Device, error) {
 
 func (r *DeviceRepository) InsertReading(device *model.Device, reading *model.Reading) (*model.Reading, error) {
 	reading.ID = newID()
+
+	r.readingsMutex.Lock()
+	defer r.readingsMutex.Unlock()
 
 	r.readings[device.ID] = append(r.readings[device.ID], reading)
 
@@ -78,7 +99,12 @@ var deviceRepository *DeviceRepository
 
 func NewDeviceRepository() (*DeviceRepository, error) {
 	if deviceRepository == nil {
-		deviceRepository = &DeviceRepository{make(map[string]*model.Device), make(map[string][]*model.Reading)}
+		deviceRepository = &DeviceRepository{
+			devicesMutex:  &sync.Mutex{},
+			readingsMutex: &sync.Mutex{},
+			devices:       make(map[string]*model.Device),
+			readings:      make(map[string][]*model.Reading),
+		}
 	}
 
 	return deviceRepository, nil
