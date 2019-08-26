@@ -95,6 +95,19 @@ func (r *DeviceRepository) InsertReading(device *model.Device, reading *model.Re
 	return reading, nil
 }
 
+func (r *DeviceRepository) GetByMAC(mac string) (*model.Device, error) {
+	r.devicesMutex.Lock()
+	defer r.devicesMutex.Unlock()
+
+	for _, device := range r.devices {
+		if device.Mac == mac {
+			return device, nil
+		}
+	}
+
+	return nil, nil
+}
+
 var deviceRepository *DeviceRepository
 
 func NewDeviceRepository() (*DeviceRepository, error) {

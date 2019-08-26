@@ -112,16 +112,27 @@ func CreateDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo, _ := repository.NewDeviceRepository()
-	newDevice, err := repo.Insert(&d)
+
+	// Check if the device has been already registered
+	device, err := repo.GetByMAC(d.Mac)
 	if err != nil {
 		errorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	if device == nil {
+		// Create a new device
+		device, err = repo.Insert(&d)
+		if err != nil {
+			errorHandler(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(newDevice); err != nil {
+	if err := json.NewEncoder(w).Encode(device); err != nil {
 		log.Println(err)
 	}
 }
