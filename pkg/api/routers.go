@@ -101,10 +101,10 @@ var routes = Routes{
 	},
 
 	Route{
-		"GetDeviceReadings",
+		"GetAllDeviceReadings",
 		[]string{http.MethodGet},
 		"/rooms/{roomId}/devices/{deviceId}/readings",
-		GetDeviceReadings,
+		GetAllDeviceReadings,
 	},
 
 	Route{

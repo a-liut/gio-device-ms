@@ -137,16 +137,19 @@ func CreateDevice(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetDeviceReadings(w http.ResponseWriter, r *http.Request) {
+func GetAllDeviceReadings(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["deviceId"]
 	roomId := vars["roomId"]
 
+	// Query parameters
 	lim := r.URL.Query().Get("limit")
 	limit, err := strconv.Atoi(lim)
 	if err != nil {
 		limit = -1 // Take all readings
 	}
+
+	name := r.URL.Query().Get("name")
 
 	repo, _ := repository.NewDeviceRepository()
 
@@ -161,7 +164,7 @@ func GetDeviceReadings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	readings, err := repo.GetReadings(id, limit)
+	readings, err := repo.GetReadings(id, limit, name)
 	if err != nil {
 		errorHandler(w, http.StatusInternalServerError, err.Error())
 		return

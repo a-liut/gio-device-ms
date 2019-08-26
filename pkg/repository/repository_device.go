@@ -33,13 +33,26 @@ func (r *DeviceRepository) Get(id string) (*model.Device, error) {
 	return d, nil
 }
 
-func (r *DeviceRepository) GetReadings(id string, limit int) ([]*model.Reading, error) {
+func (r *DeviceRepository) GetReadings(id string, limit int, name string) ([]*model.Reading, error) {
 	r.readingsMutex.Lock()
 	defer r.readingsMutex.Unlock()
 
 	readings, exists := r.readings[id]
 	if !exists {
 		return nil, fmt.Errorf("device %s not found", id)
+	}
+
+	if name != "" {
+		// Filter by name
+		filtered := make([]*model.Reading, 0)
+
+		for _, r := range readings {
+			if r.Name == name {
+				filtered = append(filtered, r)
+			}
+		}
+
+		readings = filtered
 	}
 
 	// Check boundaries
