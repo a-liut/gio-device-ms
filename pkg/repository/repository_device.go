@@ -16,6 +16,11 @@ import (
 	"sync"
 )
 
+const (
+	maxReadings             = 5000 // Max number or Reading objects stored by the repository
+	maintainedReadingsCount = 30   // Number of Reading objects to maintain after cleanup
+)
+
 type DeviceRepository struct {
 	devicesMutex  *sync.Mutex
 	readingsMutex *sync.Mutex
@@ -102,6 +107,12 @@ func (r *DeviceRepository) InsertReading(device *model.Device, reading *model.Re
 
 	r.readingsMutex.Lock()
 	defer r.readingsMutex.Unlock()
+
+	// Cleanup
+	if len(r.readings[device.ID]) >= maxReadings {
+		idx := len(r.readings[device.ID]) - maintainedReadingsCount
+		r.readings[device.ID] = r.readings[device.ID][idx:]
+	}
 
 	r.readings[device.ID] = append(r.readings[device.ID], reading)
 
