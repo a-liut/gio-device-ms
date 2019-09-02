@@ -63,11 +63,12 @@ type Reading struct {
 }
 
 type DriverApiResponse struct {
-	Message string `json:"message"`
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 type SmartVaseDriverManager struct {
-	url *url.URL
+	url string
 }
 
 func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName string) error {
@@ -107,13 +108,13 @@ func GetSmartDriverManager(roomId string) (*SmartVaseDriverManager, error) {
 		u := fmt.Sprintf("http://%s:%s", deviceDriverHost, deviceDriverPort)
 		log.Printf("DeviceDriver URL: %s\n", u)
 
-		nodeUrl, err := url.Parse(u)
+		_, err := url.Parse(u)
 		if err != nil {
 			return nil, err
 		}
 
 		driverManager = &SmartVaseDriverManager{
-			url: nodeUrl,
+			url: u,
 		}
 	}
 
