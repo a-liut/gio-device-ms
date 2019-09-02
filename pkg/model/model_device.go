@@ -70,31 +70,6 @@ type SmartVaseDriverManager struct {
 	url *url.URL
 }
 
-var driverManager *SmartVaseDriverManager = nil
-
-func GetSmartDriverManager(roomId string) (*SmartVaseDriverManager, error) {
-	if driverManager == nil {
-		// TODO: check the room to route correctly the message
-
-		fogNodeHost := os.Getenv("FOG_NODE_HOST")
-		fogNodePort := os.Getenv("FOG_NODE_PORT")
-
-		u := fmt.Sprintf("http://%s:%s", fogNodeHost, fogNodePort)
-		log.Printf("FogNode URL: %s\n", u)
-
-		nodeUrl, err := url.Parse(u)
-		if err != nil {
-			return nil, err
-		}
-
-		driverManager = &SmartVaseDriverManager{
-			url: nodeUrl,
-		}
-	}
-
-	return driverManager, nil
-}
-
 func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName string) error {
 	u := fmt.Sprintf("%s/devices/%s/actions/%s", manager.url, device.Mac, actionName)
 	resp, err := http.Post(u, "application/json", nil)
@@ -103,8 +78,9 @@ func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName 
 		return err
 	}
 
+	defer resp.Body.Close()
+
 	if resp.StatusCode != 200 {
-		defer resp.Body.Close()
 
 		// Get error response
 		var bodyData DriverApiResponse
@@ -117,4 +93,29 @@ func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName 
 	}
 
 	return nil
+}
+
+var driverManager *SmartVaseDriverManager = nil
+
+func GetSmartDriverManager(roomId string) (*SmartVaseDriverManager, error) {
+	if driverManager == nil {
+		// TODO: check the room to route correctly the message
+
+		deviceDriverHost := os.Getenv("DEVICE_DRIVER_HOST")
+		deviceDriverPort := os.Getenv("DEVICE_DRIVER_PORT")
+
+		u := fmt.Sprintf("http://%s:%s", deviceDriverHost, deviceDriverPort)
+		log.Printf("DeviceDriver URL: %s\n", u)
+
+		nodeUrl, err := url.Parse(u)
+		if err != nil {
+			return nil, err
+		}
+
+		driverManager = &SmartVaseDriverManager{
+			url: nodeUrl,
+		}
+	}
+
+	return driverManager, nil
 }

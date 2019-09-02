@@ -238,10 +238,11 @@ func TriggerDeviceAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	code := http.StatusOK
+	w.WriteHeader(code)
 
 	res := model.ApiResponse{
-		Code:    200,
+		Code:    code,
 		Message: "Action performed",
 	}
 

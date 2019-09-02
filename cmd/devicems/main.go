@@ -36,10 +36,10 @@ func main() {
 }
 
 func checkVariables() {
-	if fogNodeHost := os.Getenv("FOG_NODE_HOST"); fogNodeHost == "" {
-		panic("FOG_NODE_HOST not set.")
+	if fogNodeHost := os.Getenv("DEVICE_DRIVER_HOST"); fogNodeHost == "" {
+		panic("DEVICE_DRIVER_HOST not set.")
 	}
-	if fogNodePort := os.Getenv("FOG_NODE_PORT"); fogNodePort == "" {
-		panic("FOG_NODE_PORT not set.")
+	if fogNodePort := os.Getenv("DEVICE_DRIVER_PORT"); fogNodePort == "" {
+		panic("DEVICE_DRIVER_PORT not set.")
 	}
 }
