@@ -27,7 +27,7 @@ type Route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-func errorHandler(w http.ResponseWriter, status int32, message string) {
+func errorHandler(w http.ResponseWriter, status int, message string) {
 	r := model.ApiResponse{Code: status, Message: message}
 	w.WriteHeader(int(status))
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
