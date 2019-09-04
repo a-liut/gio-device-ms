@@ -110,7 +110,8 @@ A Room is a (possibly empty) collection of devices.
     {
       "name": "temperature",
       "value": "22",
-      "unit": "°C"
+      "unit": "°C",
+      "creation_timestamp": "xxxxx"
     }
     ```
 
