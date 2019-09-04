@@ -1,6 +1,10 @@
 # gio-device-ms
 
-Microservice that stores data of connected devices and their data.
+The Devices microservice handles rooms and devices registration and devices data storage.
+It provides a REST API that allows the Device Driver to register rooms and devices and store their data.
+Each devices is associated with an unique identifier (UUID).
+
+All the registering operations are *idempotent*: if a room or a device, identified respectively by their name and MAC address, are registered multiple times, the same UUID is given as response. This allows to preserve the history of the device and handles disconnections from the system.
 
 ## Build
 
@@ -55,10 +59,10 @@ A Room is a (possibly empty) collection of devices.
 ## REST API
 
 - ### /rooms
-
-    **GET**: return all registered rooms.
-
-    **POST**: register a new room.
+    
+        **GET**: return all registered rooms.
+    
+        **POST**: register a new room.
     
     Example body:
     ```json
@@ -67,11 +71,11 @@ A Room is a (possibly empty) collection of devices.
     }
     ```
 
-- ### /rooms/{id}
+- ### /rooms/{roomId}
 
     **GET**: return the specified room.
     
-- ### /rooms/{id}/devices
+- ### /rooms/{roomId}/devices
 
     **GET**: return all registered devices belonging a specific room.
 
@@ -85,11 +89,11 @@ A Room is a (possibly empty) collection of devices.
     }
     ```
 
-- ### /rooms/{id}/devices/{id}
+- ### /rooms/{roomId}/devices/{deviceId}
 
     **GET**: return the specified device of a specific room.
 
-- ### /rooms/{id}/devices/{id}/readings
+- ### /rooms/{roomId}/devices/{deviceId}/readings
 
     **GET**: return all readings of the specified devices in a specific room.
     
@@ -110,7 +114,7 @@ A Room is a (possibly empty) collection of devices.
     }
     ```
 
-- ### /rooms/{id}/devices/{id}/actions/{actionName}
+- ### /rooms/{roomId}/devices/{deviceId}/actions/{actionName}
 
     **POST**: trigger the requested action if possible
     
