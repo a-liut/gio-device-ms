@@ -216,37 +216,3 @@ func CreateDeviceReadings(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 }
-
-func TriggerDeviceAction(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["deviceId"]
-	roomId := vars["roomId"]
-	actionName := vars["actionName"]
-
-	repo, _ := repository.NewDeviceRepository()
-	device, _ := repo.Get(id)
-
-	if device == nil || device.Room != roomId {
-		errorHandler(w, http.StatusNotFound, "device not found")
-		return
-	}
-
-	err := device.TriggerAction(actionName)
-	if err != nil {
-		errorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	code := http.StatusOK
-	w.WriteHeader(code)
-
-	res := model.ApiResponse{
-		Code:    code,
-		Message: "Action performed",
-	}
-
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Println(err)
-	}
-}

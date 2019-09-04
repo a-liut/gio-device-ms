@@ -16,12 +16,9 @@ import (
 	"gio-device-ms/pkg/api"
 	"log"
 	"net/http"
-	"os"
 )
 
 func main() {
-	checkVariables()
-
 	port := flag.Int("port", 8080, "port to be used")
 
 	flag.Parse()
@@ -33,13 +30,4 @@ func main() {
 	p := fmt.Sprintf(":%d", *port)
 
 	log.Fatal(http.ListenAndServe(p, router))
-}
-
-func checkVariables() {
-	if fogNodeHost := os.Getenv("DEVICE_DRIVER_HOST"); fogNodeHost == "" {
-		panic("DEVICE_DRIVER_HOST not set.")
-	}
-	if fogNodePort := os.Getenv("DEVICE_DRIVER_PORT"); fogNodePort == "" {
-		panic("DEVICE_DRIVER_PORT not set.")
-	}
 }

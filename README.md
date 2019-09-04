@@ -114,22 +114,3 @@ A Room is a (possibly empty) collection of devices.
       "creation_timestamp": "xxxxx"
     }
     ```
-
-- ### /rooms/{roomId}/devices/{deviceId}/actions/{actionName}
-
-    **POST**: trigger the requested action if possible
-    
-    Example response:
-    
-    - Successful response
-      ```json
-      {
-        "message": "Done"
-      }
-      ```
-    - Action not available
-      ```json
-      {
-        "message":"action not recognized: test"
-      }
-      ```

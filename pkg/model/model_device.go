@@ -11,12 +11,7 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
-	"net/url"
-	"os"
 )
 
 type Device struct {
@@ -42,82 +37,10 @@ func (device *Device) Validate() (bool, error) {
 	return true, nil
 }
 
-func (device *Device) TriggerAction(actionName string) error {
-	driver, err := GetSmartDriverManager(device.Room)
-	if err != nil {
-		return err
-	}
-
-	if err = driver.TriggerAction(device, actionName); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 type Reading struct {
 	ID                string `json:"id,omitempty"`
 	Name              string `json:"name"`
 	Value             string `json:"value"`
 	Unit              string `json:"unit"`
 	CreationTimestamp string `json:"creation_timestamp"`
-}
-
-type DriverApiResponse struct {
-	Code    int    `json:"code,omitempty"`
-	Message string `json:"message,omitempty"`
-}
-
-type SmartVaseDriverManager struct {
-	url string
-}
-
-func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName string) error {
-	u := fmt.Sprintf("%s/devices/%s/actions/%s", manager.url, device.Mac, actionName)
-	resp, err := http.Post(u, "application/json", nil)
-
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-
-		// Get error response
-		var bodyData DriverApiResponse
-		err := json.NewDecoder(resp.Body).Decode(&bodyData)
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("cannot trigger action: (%d) %s", resp.StatusCode, bodyData.Message)
-	}
-
-	return nil
-}
-
-var driverManager *SmartVaseDriverManager = nil
-
-func GetSmartDriverManager(roomId string) (*SmartVaseDriverManager, error) {
-	if driverManager == nil {
-		// TODO: check the room to route correctly the message
-
-		deviceDriverHost := os.Getenv("DEVICE_DRIVER_HOST")
-		deviceDriverPort := os.Getenv("DEVICE_DRIVER_PORT")
-
-		u := fmt.Sprintf("http://%s:%s", deviceDriverHost, deviceDriverPort)
-		log.Printf("DeviceDriver URL: %s\n", u)
-
-		_, err := url.Parse(u)
-		if err != nil {
-			return nil, err
-		}
-
-		driverManager = &SmartVaseDriverManager{
-			url: u,
-		}
-	}
-
-	return driverManager, nil
 }
