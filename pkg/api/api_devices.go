@@ -231,19 +231,21 @@ func TriggerDeviceAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := device.TriggerAction(actionName)
-	if err != nil {
-		errorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+	done := device.TriggerAction(actionName)
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	code := http.StatusOK
 	w.WriteHeader(code)
 
+	m := "Action performed"
+	if !done {
+		code = http.StatusInternalServerError
+		m = "Cannot perform action"
+	}
+
 	res := model.ApiResponse{
 		Code:    code,
-		Message: "Action performed",
+		Message: m,
 	}
 
 	if err := json.NewEncoder(w).Encode(res); err != nil {

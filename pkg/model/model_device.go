@@ -17,6 +17,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
+	"sync"
 )
 
 type Device struct {
@@ -24,6 +26,10 @@ type Device struct {
 	Name string `json:"name"`
 	Mac  string `json:"mac"`
 	Room string `json:"room"`
+}
+
+func (device *Device) String() string {
+	return fmt.Sprintf("<Device %s, %s, %s, %s>", device.ID, device.Name, device.Mac, device.Room)
 }
 
 func (device *Device) Validate() (bool, error) {
@@ -42,17 +48,28 @@ func (device *Device) Validate() (bool, error) {
 	return true, nil
 }
 
-func (device *Device) TriggerAction(actionName string) error {
-	driver, err := GetSmartDriverManager(device.Room)
-	if err != nil {
-		return err
+// Triggers an action on this device.The request is sent to all DeviceDrivers registered.
+func (device *Device) TriggerAction(actionName string) bool {
+	// Broadcast the action to all registered drivers
+	errors := 0
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(deviceDrivers))
+
+	for _, driver := range deviceDrivers {
+		go func() {
+			if err := driver.TriggerActionOnDevice(device, actionName); err != nil {
+				log.Println(err)
+				errors++
+			}
+
+			wg.Done()
+		}()
 	}
 
-	if err = driver.TriggerAction(device, actionName); err != nil {
-		return err
-	}
+	wg.Wait()
 
-	return nil
+	return errors == len(deviceDrivers)
 }
 
 type Reading struct {
@@ -68,12 +85,57 @@ type DriverApiResponse struct {
 	Message string `json:"message,omitempty"`
 }
 
-type SmartVaseDriverManager struct {
+type DeviceDriver struct {
 	url string
 }
 
-func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName string) error {
-	u := fmt.Sprintf("%s/devices/%s/actions/%s", manager.url, device.Mac, actionName)
+func (deviceDriver *DeviceDriver) String() string {
+	return fmt.Sprintf("<DeviceDriver %s>", deviceDriver.url)
+}
+
+type FogNodeDevice struct {
+	ID              string              `json:"id"`
+	Name            string              `json:"name"`
+	Characteristics []BLECharacteristic `json:"characteristics"`
+}
+
+type BLECharacteristic struct {
+	UUID string `json:"uuid"`
+	Name string `json:"name"`
+}
+
+func (deviceDriver *DeviceDriver) GetConnectedDevices() ([]FogNodeDevice, error) {
+	u := fmt.Sprintf("%s/devices", deviceDriver.url)
+	resp, err := http.Post(u, "application/json", nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+
+		// Get error response
+		var bodyData DriverApiResponse
+		err := json.NewDecoder(resp.Body).Decode(&bodyData)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, fmt.Errorf("cannot trigger action: (%d) %s", resp.StatusCode, bodyData.Message)
+	}
+
+	var devices []FogNodeDevice
+	if err := json.NewDecoder(resp.Body).Decode(&devices); err != nil {
+		return nil, err
+	}
+
+	return devices, nil
+}
+
+func (deviceDriver *DeviceDriver) TriggerActionOnDevice(device *Device, actionName string) error {
+	u := fmt.Sprintf("%s/devices/%s/actions/%s", deviceDriver.url, device.Mac, actionName)
 	resp, err := http.Post(u, "application/json", nil)
 
 	if err != nil {
@@ -82,7 +144,7 @@ func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName 
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 
 		// Get error response
 		var bodyData DriverApiResponse
@@ -97,27 +159,30 @@ func (manager *SmartVaseDriverManager) TriggerAction(device *Device, actionName 
 	return nil
 }
 
-var driverManager *SmartVaseDriverManager = nil
+var deviceDrivers []DeviceDriver = nil
 
-func GetSmartDriverManager(roomId string) (*SmartVaseDriverManager, error) {
-	if driverManager == nil {
-		// TODO: check the room to route correctly the message
+func Init() error {
+	log.Printf("Initializing DeviceDrivers")
+	count, err := strconv.Atoi(os.Getenv("DEVICE_DRIVER_COUNT"))
+	if err != nil {
+		return err
+	}
 
-		deviceDriverHost := os.Getenv("DEVICE_DRIVER_HOST")
-		deviceDriverPort := os.Getenv("DEVICE_DRIVER_PORT")
+	deviceDrivers = make([]DeviceDriver, count)
+	for i := 0; i < count; i++ {
+		deviceDriverHost := os.Getenv(fmt.Sprintf("DEVICE_DRIVER_%d_HOST", i))
+		deviceDriverPort := os.Getenv(fmt.Sprintf("DEVICE_DRIVER_%d_PORT", i))
 
 		u := fmt.Sprintf("http://%s:%s", deviceDriverHost, deviceDriverPort)
-		log.Printf("DeviceDriver URL: %s\n", u)
+		log.Printf("DeviceDriver %d URL: %s\n", i, u)
 
 		_, err := url.Parse(u)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		driverManager = &SmartVaseDriverManager{
-			url: u,
-		}
+		deviceDrivers[i].url = u
 	}
 
-	return driverManager, nil
+	return nil
 }

@@ -14,9 +14,11 @@ import (
 	"flag"
 	"fmt"
 	"gio-device-ms/pkg/api"
+	"gio-device-ms/pkg/model"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -25,6 +27,10 @@ func main() {
 	port := flag.Int("port", 8080, "port to be used")
 
 	flag.Parse()
+
+	if err := model.Init(); err != nil {
+		panic(err)
+	}
 
 	log.Printf("Server started on port %d", *port)
 
@@ -36,10 +42,20 @@ func main() {
 }
 
 func checkVariables() {
-	if fogNodeHost := os.Getenv("DEVICE_DRIVER_HOST"); fogNodeHost == "" {
-		panic("DEVICE_DRIVER_HOST not set.")
+	count, err := strconv.Atoi(os.Getenv("DEVICE_DRIVER_COUNT"))
+	if err != nil {
+		panic("invalid DEVICE_DRIVER_COUNT")
 	}
-	if fogNodePort := os.Getenv("DEVICE_DRIVER_PORT"); fogNodePort == "" {
-		panic("DEVICE_DRIVER_PORT not set.")
+
+	for i := 0; i < count; i++ {
+		hostKey := fmt.Sprintf("DEVICE_DRIVER_%d_HOST", i)
+		if host := os.Getenv(hostKey); host == "" {
+			panic(fmt.Sprintf("%s not set", hostKey))
+		}
+
+		portKey := fmt.Sprintf("DEVICE_DRIVER_%d_PORT", i)
+		if port := os.Getenv(portKey); port == "" {
+			panic(fmt.Sprintf("%s not set", portKey))
+		}
 	}
 }
