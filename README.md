@@ -49,12 +49,12 @@ A Room is a (possibly empty) collection of devices.
 
     Example:
     
-    ```json
-    {
-      "id": "5c8fa383-f9b7-4d80-9572-3276da1ab67d",
-      "name": "Room1"
-    }
-    ```
+```json
+{
+    "id": "5c8fa383-f9b7-4d80-9572-3276da1ab67d",
+    "name": "Room1"
+}
+```
 
 ## REST API
 
@@ -65,11 +65,11 @@ A Room is a (possibly empty) collection of devices.
         **POST**: register a new room.
     
     Example body:
-    ```json
-    {
-      "name": "Room1"
-    }
-    ```
+```json
+{
+  "name": "Room1"
+}
+```
 
 - ### /rooms/{roomId}
 
@@ -82,12 +82,12 @@ A Room is a (possibly empty) collection of devices.
     **POST**: register a new device in a specific room.
     
     Example body:
-    ```json
-    {
-      "mac": "f6:f1:bb:06:31:71",
-      "name": "device1"
-    }
-    ```
+```json
+{
+    "mac": "f6:f1:bb:06:31:71",
+    "name": "device1"
+}
+```
 
 - ### /rooms/{roomId}/devices/{deviceId}
 
@@ -106,30 +106,36 @@ A Room is a (possibly empty) collection of devices.
     **POST**: register a new reading for the specified device.
     
     Example body:
-    ```json
-    {
-      "name": "temperature",
-      "value": "22",
-      "unit": "°C",
-      "creation_timestamp": "xxxxx"
-    }
-    ```
+```json
+{
+    "name": "temperature",
+    "value": "22",
+    "unit": "°C",
+    "creation_timestamp": "xxxxx"
+}
+```
 
 - ### /rooms/{roomId}/devices/{deviceId}/actions/{actionName}
 
-    **POST**: trigger the requested action if possible
+    **POST**: trigger the requested action if possible. It allows send a value with the request.
     
+    Example body:
+```json
+{
+  "value": "22"
+}
+```
     Example response:
     
     - Successful response
-      ```json
-      {
-        "message": "Done"
-      }
-      ```
+```json
+{
+  "message": "Done"
+}
+```
     - Action not available
-      ```json
-      {
-        "message":"action not recognized: test"
-      }
-      ```
+```json
+{
+  "message":"action not recognized: test"
+}
+```

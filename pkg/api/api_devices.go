@@ -12,11 +12,13 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"gio-device-ms/pkg/model"
 	"gio-device-ms/pkg/repository"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -217,11 +219,28 @@ func CreateDeviceReadings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getActionData(r *http.Request) *model.ActionData {
+	var actionData model.ActionData
+	err := json.NewDecoder(r.Body).Decode(&actionData)
+	if err != nil {
+		return nil
+	}
+
+	return &actionData
+}
+
 func TriggerDeviceAction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["deviceId"]
 	roomId := vars["roomId"]
 	actionName := vars["actionName"]
+
+	log.Printf("TriggerDeviceAction called: %s", actionName)
+
+	actionData := getActionData(r)
+	if actionData == nil {
+		log.Printf("WARNING: no data passed for action %s", actionName)
+	}
 
 	repo, _ := repository.NewDeviceRepository()
 	device, _ := repo.Get(id)
@@ -231,16 +250,23 @@ func TriggerDeviceAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	done := device.TriggerAction(actionName)
+	errors, oneSuccessful := device.TriggerAction(actionName, actionData)
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	code := http.StatusOK
 	w.WriteHeader(code)
 
 	m := "Action performed"
-	if !done {
+	if !oneSuccessful {
 		code = http.StatusInternalServerError
-		m = "Cannot perform action"
+		m = "Cannot perform action %s: ["
+
+		errorStrings := make([]string, len(errors))
+		for i, err := range errors {
+			errorStrings[i] = err.Error()
+		}
+
+		m = fmt.Sprintf("%s%s]", m, strings.Join(errorStrings, ","))
 	}
 
 	res := model.ApiResponse{

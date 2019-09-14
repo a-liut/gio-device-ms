@@ -11,8 +11,10 @@
 package model
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"gio-device-ms/pkg/utils"
 	"log"
 	"net/http"
 	"net/url"
@@ -26,6 +28,10 @@ type Device struct {
 	Name string `json:"name"`
 	Mac  string `json:"mac"`
 	Room string `json:"room"`
+}
+
+type ActionData struct {
+	Value int `json:"value"`
 }
 
 func (device *Device) String() string {
@@ -49,27 +55,38 @@ func (device *Device) Validate() (bool, error) {
 }
 
 // Triggers an action on this device.The request is sent to all DeviceDrivers registered.
-func (device *Device) TriggerAction(actionName string) bool {
+// Returns the array of errors raised and a boolean indicating whether at least one request has been successfully completed.
+func (device *Device) TriggerAction(actionName string, actionData *ActionData) ([]error, bool) {
 	// Broadcast the action to all registered drivers
-	errors := 0
+	errorsChan := make(chan error, 1)
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(deviceDrivers))
 
-	for _, driver := range deviceDrivers {
-		go func() {
-			if err := driver.TriggerActionOnDevice(device, actionName); err != nil {
+	for _, d := range deviceDrivers {
+		go func(driver DeviceDriver) {
+			log.Printf("TriggerActionOnDevice on %s\n", driver)
+			if err := driver.TriggerActionOnDevice(device, actionName, actionData); err != nil {
 				log.Println(err)
-				errors++
+				errorsChan <- err
 			}
 
 			wg.Done()
-		}()
+		}(d)
 	}
 
-	wg.Wait()
+	go func() {
+		wg.Wait()
 
-	return errors == len(deviceDrivers)
+		close(errorsChan)
+	}()
+
+	errors := make([]error, 0)
+	for err := range errorsChan {
+		errors = append(errors, err)
+	}
+
+	return errors, len(errors) != len(deviceDrivers)
 }
 
 type Reading struct {
@@ -134,10 +151,21 @@ func (deviceDriver *DeviceDriver) GetConnectedDevices() ([]FogNodeDevice, error)
 	return devices, nil
 }
 
-func (deviceDriver *DeviceDriver) TriggerActionOnDevice(device *Device, actionName string) error {
-	u := fmt.Sprintf("%s/devices/%s/actions/%s", deviceDriver.url, device.Mac, actionName)
-	resp, err := http.Post(u, "application/json", nil)
+func getActionBodyData(data *ActionData) *bytes.Buffer {
+	if data != nil {
+		body, err := json.Marshal(data)
+		if err == nil {
+			return bytes.NewBuffer(body)
+		}
+	}
+	return nil
+}
 
+func (deviceDriver *DeviceDriver) TriggerActionOnDevice(device *Device, actionName string, actionData *ActionData) error {
+	u := fmt.Sprintf("%s/devices/%s/actions/%s", deviceDriver.url, device.Mac, actionName)
+
+	bodyData := getActionBodyData(actionData)
+	resp, err := utils.DoPost(u, bodyData)
 	if err != nil {
 		return err
 	}
@@ -145,7 +173,6 @@ func (deviceDriver *DeviceDriver) TriggerActionOnDevice(device *Device, actionNa
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-
 		// Get error response
 		var bodyData DriverApiResponse
 		err := json.NewDecoder(resp.Body).Decode(&bodyData)
