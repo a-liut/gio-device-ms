@@ -254,7 +254,6 @@ func TriggerDeviceAction(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	code := http.StatusOK
-	w.WriteHeader(code)
 
 	m := "Action performed"
 	if !oneSuccessful {
@@ -274,6 +273,7 @@ func TriggerDeviceAction(w http.ResponseWriter, r *http.Request) {
 		Message: m,
 	}
 
+	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Println(err)
 	}
