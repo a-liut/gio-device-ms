@@ -257,7 +257,7 @@ func TriggerDeviceAction(w http.ResponseWriter, r *http.Request) {
 
 	m := "Action performed"
 	if !oneSuccessful {
-		code = http.StatusInternalServerError
+		code = http.StatusBadRequest
 		m = "Cannot perform action %s: ["
 
 		errorStrings := make([]string, len(errors))
