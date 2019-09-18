@@ -2,7 +2,7 @@
 
 The Devices microservice handles rooms and devices registration and devices data storage.
 It provides a REST API that allows the Device Driver to register rooms and devices and store their data.
-Each devices is associated with an unique identifier (UUID).
+Each device is associated with a unique identifier (UUID).
 
 All the registering operations are *idempotent*: if a room or a device, identified respectively by their name and MAC address, are registered multiple times, the same UUID is given as response. This allows to preserve the history of the device and handles disconnections from the system.
 
@@ -117,7 +117,7 @@ A Room is a (possibly empty) collection of devices.
 
 - ### /rooms/{roomId}/devices/{deviceId}/actions/{actionName}
 
-    **POST**: trigger the requested action if possible. It allows send a value with the request.
+    **POST**: trigger the requested action if possible. It allows sending a value with the request.
     
     Example body:
 ```json
