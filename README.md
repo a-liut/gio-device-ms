@@ -58,7 +58,7 @@ A Room is a (possibly empty) collection of devices.
 
 ## REST API
 
-- ### /rooms
+- /rooms
     
         **GET**: return all registered rooms.
     
@@ -71,11 +71,11 @@ A Room is a (possibly empty) collection of devices.
 }
 ```
 
-- ### /rooms/{roomId}
+- /rooms/{roomId}
 
     **GET**: return the specified room.
     
-- ### /rooms/{roomId}/devices
+- /rooms/{roomId}/devices
 
     **GET**: return all registered devices belonging a specific room.
 
@@ -89,11 +89,11 @@ A Room is a (possibly empty) collection of devices.
 }
 ```
 
-- ### /rooms/{roomId}/devices/{deviceId}
+- /rooms/{roomId}/devices/{deviceId}
 
     **GET**: return the specified device of a specific room.
 
-- ### /rooms/{roomId}/devices/{deviceId}/readings
+- /rooms/{roomId}/devices/{deviceId}/readings
 
     **GET**: return all readings of the specified devices in a specific room.
     
@@ -115,7 +115,7 @@ A Room is a (possibly empty) collection of devices.
 }
 ```
 
-- ### /rooms/{roomId}/devices/{deviceId}/actions/{actionName}
+- /rooms/{roomId}/devices/{deviceId}/actions/{actionName}
 
     **POST**: trigger the requested action if possible. It allows sending a value with the request.
     
